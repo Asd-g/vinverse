@@ -1,3 +1,6 @@
+##### 0.9.3:
+    Added parameter `thr`. (vinverse only)
+
 ##### 0.9.2:
     Added parameter `clip2`. (vinverse only)
 

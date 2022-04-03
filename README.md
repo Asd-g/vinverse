@@ -13,7 +13,7 @@ This plugin also includes a fast implementation of [Vinverse2 function](https://
 ### Usage:
 
 ```
-vinverse (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt", clip "clip2")
+vinverse (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt", clip "clip2", int "thr")
 ```
 ```
 vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt")
@@ -31,6 +31,7 @@ vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt
 
 - amnt\
     Change no pixel by more than this.\
+    Must be between 0 and range_max.\
     Default: range_max ((2 ^ bit_depth) - 1).
 
 - uv\
@@ -56,6 +57,12 @@ vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt
 - clip2 (vinverse only)\
     External clip from which to take contra sharpening.\
     This clip must be the same length, width, height, and colorspace as the input clip.
+
+- thr (vinverse only)\
+    Threshold.\
+    If the absolute difference between the source and the blurred pixel is below this threshold, the pixel is just copied otherwirse it's processed.\
+    Must be between 0 and range_max.\
+    Default: 0 (every pixel is processed).
 
 ### Building:
 

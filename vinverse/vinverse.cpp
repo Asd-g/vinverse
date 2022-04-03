@@ -140,34 +140,59 @@ static void vertical_sbr_c(void* __restrict dstp_, void* __restrict tempp_, cons
     }
 }
 
-template <typename T, bool eclip>
-static void finalize_plane_c(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, float sstr, float scl, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height, int amnt) noexcept
+template <typename T, VinverseMode mode, bool eclip, bool thresh>
+void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept
 {
     const T* srcp = reinterpret_cast<const T*>(srcp_);
     const T* pb3 = reinterpret_cast<const T*>(pb3_);
     const T* pb6 = reinterpret_cast<const T*>(pb6_);
     T* __restrict dstp = reinterpret_cast<T*>(dstp_);
 
-    if (eclip)
+    if constexpr (eclip)
     {
         for (int y = 0; y < height; ++y)
         {
             for (int x = 0; x < width; ++x)
             {
                 const float d1 = static_cast<float>(srcp[x] - pb3[x]);
-                const float d2 = static_cast<float>(srcp[x] - pb6[x]);
 
-                const float da = (std::abs(d1) < std::abs(d2)) ? d1 : d2;
-                const float desired = da * scl;
+                if constexpr (thresh)
+                {
+                    if (std::abs(d1) < thr_)
+                        dstp[x] = srcp[x];
+                    else
+                    {
+                        const float d2 = static_cast<float>(srcp[x] - pb6[x]);
 
-                const int add = static_cast<int>(((d1 * d2) < 0.0f) ? desired : da);
-                int df = pb6[x] + add;
+                        const float da = (std::abs(d1) < std::abs(d2)) ? d1 : d2;
+                        const float desired = da * scl_;
 
-                const int minm = srcp[x] - amnt;
-                const int maxf = srcp[x] + amnt;
+                        const int add = static_cast<int>(((d1 * d2) < 0.0f) ? desired : da);
+                        int df = pb6[x] + add;
 
-                df = std::max(df, minm);
-                dstp[x] = std::min(df, maxf);
+                        const int minm = srcp[x] - amnt_;
+                        const int maxf = srcp[x] + amnt_;
+
+                        df = std::max(df, minm);
+                        dstp[x] = std::min(df, maxf);
+                    }
+                }
+                else
+                {
+                    const float d2 = static_cast<float>(srcp[x] - pb6[x]);
+
+                    const float da = (std::abs(d1) < std::abs(d2)) ? d1 : d2;
+                    const float desired = da * scl_;
+
+                    const int add = static_cast<int>(((d1 * d2) < 0.0f) ? desired : da);
+                    int df = pb6[x] + add;
+
+                    const int minm = srcp[x] - amnt_;
+                    const int maxf = srcp[x] + amnt_;
+
+                    df = std::max(df, minm);
+                    dstp[x] = std::min(df, maxf);
+                }
             }
 
             srcp += src_pitch;
@@ -183,20 +208,46 @@ static void finalize_plane_c(void* __restrict dstp_, const void* srcp_, const vo
             for (int x = 0; x < width; ++x)
             {
                 const float d1 = static_cast<float>(srcp[x] - pb3[x]);
-                const int d2 = pb3[x] - pb6[x];
-                const float t = d2 * sstr;
 
-                const float da = (std::abs(d1) < std::abs(t)) ? d1 : t;
-                const float desired = da * scl;
+                if constexpr (thresh)
+                {
+                    if (std::abs(d1) < thr_)
+                        dstp[x] = srcp[x];
+                    else
+                    {
+                        const int d2 = pb3[x] - pb6[x];
+                        const float t = d2 * sstr_;
 
-                const int add = static_cast<int>(((d1 * t) < 0.0f) ? desired : da);
-                int df = pb3[x] + add;
+                        const float da = (std::abs(d1) < std::abs(t)) ? d1 : t;
+                        const float desired = da * scl_;
 
-                const int minm = srcp[x] - amnt;
-                const int maxf = srcp[x] + amnt;
+                        const int add = static_cast<int>(((d1 * t) < 0.0f) ? desired : da);
+                        int df = pb3[x] + add;
 
-                df = std::max(df, minm);
-                dstp[x] = std::min(df, maxf);
+                        const int minm = srcp[x] - amnt_;
+                        const int maxf = srcp[x] + amnt_;
+
+                        df = std::max(df, minm);
+                        dstp[x] = std::min(df, maxf);
+                    }
+                }
+                else
+                {
+                    const int d2 = pb3[x] - pb6[x];
+                    const float t = d2 * sstr_;
+
+                    const float da = (std::abs(d1) < std::abs(t)) ? d1 : t;
+                    const float desired = da * scl_;
+
+                    const int add = static_cast<int>(((d1 * t) < 0.0f) ? desired : da);
+                    int df = pb3[x] + add;
+
+                    const int minm = srcp[x] - amnt_;
+                    const int maxf = srcp[x] + amnt_;
+
+                    df = std::max(df, minm);
+                    dstp[x] = std::min(df, maxf);
+                }
             }
 
             srcp += src_pitch;
@@ -207,9 +258,9 @@ static void finalize_plane_c(void* __restrict dstp_, const void* srcp_, const vo
     }
 }
 
-template <typename T, VinverseMode mode, bool eclip>
-Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, float scl, int opt, PClip clip2, IScriptEnvironment* env)
-    : GenericVideoFilter(child), sstr_(sstr), amnt_(amnt), uv_(uv), scl_(scl), opt_(opt), clip2_(clip2), blur3_buffer(nullptr), blur6_buffer(nullptr)
+template <typename T, VinverseMode mode, bool eclip, bool thresh>
+Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, int uv, float scl, int opt, PClip clip2, int thr, IScriptEnvironment* env)
+    : GenericVideoFilter(child), sstr_(sstr), amnt_(amnt), uv_(uv), scl_(scl), opt_(opt), clip2_(clip2), thr_(thr), blur3_buffer(nullptr), blur6_buffer(nullptr)
 {
     if (!vi.IsPlanar())
         env->ThrowError("Vinverse: only planar input is supported!");
@@ -237,7 +288,7 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
     if (!sse2 && opt_ == 1)
         env->ThrowError("Vinverse: opt=1 requires SSE2.");
 
-    if (eclip)
+    if constexpr (eclip)
     {
         const VideoInfo& vi_ = clip2_->GetVideoInfo();
 
@@ -249,6 +300,9 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
             env->ThrowError("Vinverse: clip2's number of frames doesn't match.");
     }
 
+    if (thr_ < 0 || thr_ > peak)
+        env->ThrowError("Vinverse: thr must be between 0..%s!", std::to_string(peak).c_str());
+
     if ((avx512 && opt_ < 0) || opt_ == 3)
     {
         pb_pitch = (vi.width + 63) & ~63;
@@ -258,7 +312,6 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
             blur3 = vertical_blur3_avx512_8;
             blur5 = vertical_blur5_avx512_8;
             sbr = vertical_sbr_avx512_8;
-            fin_plane = finalize_plane_avx512_8<eclip>;
         }
         else
         {
@@ -293,9 +346,9 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
                     break;
                 }
             }
-
-            fin_plane = finalize_plane_avx512_16<eclip>;
         }
+
+        fin_plane = &Vinverse::finalize_plane_avx512;
     }
     else if ((avx2 && opt_ < 0) || opt_ == 2)
     {
@@ -306,7 +359,6 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
             blur3 = vertical_blur3_avx2_8;
             blur5 = vertical_blur5_avx2_8;
             sbr = vertical_sbr_avx2_8;
-            fin_plane = finalize_plane_avx2_8<eclip>;
         }
         else
         {
@@ -341,9 +393,9 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
                     break;
                 }
             }
-
-            fin_plane = finalize_plane_avx2_16<eclip>;
         }
+
+        fin_plane = &Vinverse::finalize_plane_avx2;
     }
     else if ((sse2 && opt_ < 0) || opt_ == 1)
     {
@@ -354,7 +406,6 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
             blur3 = vertical_blur3_sse2_8;
             blur5 = vertical_blur5_sse2_8;
             sbr = vertical_sbr_sse2_8;
-            fin_plane = finalize_plane_sse2_8<eclip>;
         }
         else
         {
@@ -389,9 +440,9 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
                     break;
                 }
             }
-
-            fin_plane = finalize_plane_sse2_16<eclip>;
         }
+
+        fin_plane = &Vinverse::finalize_plane_sse2;
     }
     else
     {
@@ -438,7 +489,7 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
             }
         }
 
-        fin_plane = finalize_plane_c<T, eclip>;
+        fin_plane = &Vinverse::finalize_plane_c;
     }
 
     size_t pbuf_size = vi.height * pb_pitch;
@@ -456,8 +507,8 @@ Vinverse<T, mode, eclip>::Vinverse(PClip child, float sstr, int amnt, int uv, fl
     catch (const AvisynthError&) { v8 = false; }
 }
 
-template <typename T, VinverseMode mode, bool eclip>
-PVideoFrame __stdcall Vinverse<T, mode, eclip>::GetFrame(int n, IScriptEnvironment* env)
+template <typename T, VinverseMode mode, bool eclip, bool thresh>
+PVideoFrame __stdcall Vinverse<T, mode, eclip, thresh>::GetFrame(int n, IScriptEnvironment* env)
 {
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = (v8) ? env->NewVideoFrameP(vi, &src) : env->NewVideoFrame(vi);
@@ -483,7 +534,7 @@ PVideoFrame __stdcall Vinverse<T, mode, eclip>::GetFrame(int n, IScriptEnvironme
             continue;
         }
 
-        if (mode == VinverseMode::Vinverse)
+        if constexpr (mode == VinverseMode::Vinverse)
         {
             blur3(blur3_buffer, srcp, pb_pitch, src_pitch, width, height);
 
@@ -499,15 +550,15 @@ PVideoFrame __stdcall Vinverse<T, mode, eclip>::GetFrame(int n, IScriptEnvironme
             blur3(blur6_buffer, blur3_buffer, pb_pitch, pb_pitch, width, height);
         }
 
-        if (eclip)
+        if constexpr (eclip)
         {
             PVideoFrame clp2 = clip2_->GetFrame(n, env);
 
-            fin_plane(dstp, srcp, blur3_buffer, clp2->GetReadPtr(current_plane), sstr_, scl_, src_pitch,
-                dst_pitch / sizeof(T), pb_pitch, clp2->GetPitch(current_plane) / sizeof(T), width, height, amnt_);
+            (this->*fin_plane)(dstp, srcp, blur3_buffer, clp2->GetReadPtr(current_plane), src_pitch,
+                dst_pitch / sizeof(T), pb_pitch, clp2->GetPitch(current_plane) / sizeof(T), width, height);
         }
         else
-            fin_plane(dst->GetWritePtr(current_plane), srcp, blur3_buffer, blur6_buffer, sstr_, scl_, src_pitch, dst_pitch / sizeof(T), pb_pitch, 0, width, height, amnt_);
+            (this->*fin_plane)(dst->GetWritePtr(current_plane), srcp, blur3_buffer, blur6_buffer, src_pitch, dst_pitch / sizeof(T), pb_pitch, 0, width, height);
     }
 
     return dst;
@@ -515,41 +566,66 @@ PVideoFrame __stdcall Vinverse<T, mode, eclip>::GetFrame(int n, IScriptEnvironme
 
 AVSValue __cdecl Create_Vinverse(AVSValue args, void*, IScriptEnvironment* env)
 {
-    enum { CLIP, SSTR, AMNT, UV, SCL, OPT, CLIP2 };
+    enum { CLIP, SSTR, AMNT, UV, SCL, OPT, CLIP2, THR };
 
     PClip clip = args[CLIP].AsClip();
     PClip clip2 = (args[CLIP2].Defined()) ? args[CLIP2].AsClip() : nullptr;
+    const int thresh = args[THR].AsInt(0);
 
     if (clip2)
     {
-        switch (clip->GetVideoInfo().ComponentSize())
+        if (thresh > 0)
         {
-            case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse, true>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, env);
-            case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse, true>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, env);
-            default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
+            switch (clip->GetVideoInfo().ComponentSize())
+            {
+                case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse, true, true>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, thresh, env);
+                case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse, true, true>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, thresh, env);
+                default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
+            }
+        }
+        else
+        {
+            switch (clip->GetVideoInfo().ComponentSize())
+            {
+                case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse, true, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, 0, env);
+                case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse, true, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, 0, env);
+                default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
+            }
         }
     }
     else
     {
-        switch (clip->GetVideoInfo().ComponentSize())
+        if (thresh > 0)
         {
-            case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, env);
-            case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, env);
-            default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
+            switch (clip->GetVideoInfo().ComponentSize())
+            {
+                case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse, false, true>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, thresh, env);
+                case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse, false, true>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, thresh, env);
+                default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
+            }
+        }
+        else
+        {
+            switch (clip->GetVideoInfo().ComponentSize())
+            {
+                case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse, false, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, 0, env);
+                case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse, false, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), clip2, 0, env);
+                default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
+            }
         }
     }
 }
 
 AVSValue __cdecl Create_Vinverse2(AVSValue args, void*, IScriptEnvironment* env)
 {
-    enum { CLIP, SSTR, AMNT, UV, SCL, OPT, CLIP2 };
+    enum { CLIP, SSTR, AMNT, UV, SCL, OPT, CLIP2, THR };
 
     PClip clip = args[CLIP].AsClip();
 
     switch (clip->GetVideoInfo().ComponentSize())
     {
-        case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse2, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), nullptr, env);
-        case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse2, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), nullptr, env);
+        case 1: return new Vinverse<uint8_t, VinverseMode::Vinverse2, false, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), nullptr, 0, env);
+        case 2: return new Vinverse<uint16_t, VinverseMode::Vinverse2, false, false>(clip, args[SSTR].AsFloatf(2.7f), args[AMNT].AsInt(-1), args[UV].AsInt(3), args[SCL].AsFloatf(0.25f), args[OPT].AsInt(-1), nullptr, 0, env);
         default: env->ThrowError("Vinverse: only 8..16-bit input is supported!");
     }
 }
@@ -560,7 +636,7 @@ extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScri
 {
     AVS_linkage = vectors;
 
-    env->AddFunction("vinverse", "c[sstr]f[amnt]i[uv]i[scl]f[opt]i[clip2]c", Create_Vinverse, 0);
+    env->AddFunction("vinverse", "c[sstr]f[amnt]i[uv]i[scl]f[opt]i[clip2]c[thr]i", Create_Vinverse, 0);
     env->AddFunction("vinverse2", "c[sstr]f[amnt]i[uv]i[scl]f[opt]i", Create_Vinverse2, 0);
     return "Doushimashita?";
 }

@@ -1,8 +1,8 @@
 #include <winver.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION             0,9,2,0
-PRODUCTVERSION        	0,9,2,0
+FILEVERSION             0,9,3,0
+PRODUCTVERSION        	0,9,3,0
 FILEFLAGSMASK           VS_FFI_FILEFLAGSMASK
 FILEFLAGS               0x0L
 FILEOS                  VOS__WINDOWS32
@@ -15,11 +15,11 @@ BEGIN
         BEGIN
         VALUE "Comments",         "A simple filter to remove residual combing."
         VALUE "FileDescription",  "vinverse for AviSynth 2.6 / AviSynth+"
-        VALUE "FileVersion",      "0.9.2"
+        VALUE "FileVersion",      "0.9.3"
         VALUE "InternalName",     "vinverse"
         VALUE "OriginalFilename", "vinverse.dll"
         VALUE "ProductName",      "vinverse"
-        VALUE "ProductVersion",   "0.9.2"
+        VALUE "ProductVersion",   "0.9.3"
         END
     END
     BLOCK "VarFileInfo"
