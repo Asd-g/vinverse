@@ -27,7 +27,6 @@ private:
     int amnt_;
     int uv_;
     float scl_;
-    int opt_;
     PClip clip2_;
     int thr_;
 
@@ -37,9 +36,6 @@ private:
     int pb_pitch;
     std::unique_ptr<T[]> buffer;
 
-    bool avx512;
-    bool avx2;
-    bool sse2;
     bool v8;
 
     void finalize_plane_c(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept;

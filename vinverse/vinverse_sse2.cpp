@@ -480,7 +480,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_sse2(void* __restrict dstp
                             df = max(df, minm);
                             df = min(df, maxf);
 
-                            select(Vec16cb(ch), compress_saturated(df, zero), Vec16uc().loadl(srcp + x)).storel(dstp + x);
+                            select(Vec16cb(ch), compress_saturated_s2u(df, zero), Vec16uc().loadl(srcp + x)).storel(dstp + x);
                         }
                     }
                     else
@@ -517,7 +517,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_sse2(void* __restrict dstp
                         df = max(df, minm);
                         df = min(df, maxf);
 
-                        auto result = compress_saturated(df, zero);
+                        auto result = compress_saturated_s2u(df, zero);
                         result.storel(dstp + x);
                     }
                 }

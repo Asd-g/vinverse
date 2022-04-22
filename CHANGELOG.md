@@ -1,3 +1,6 @@
+##### 0.9.4:
+    Fixed overflow when `clip2` is used.
+
 ##### 0.9.3:
     Added parameter `thr`. (vinverse only)
 

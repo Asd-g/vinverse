@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <emmintrin.h>
 #include <string>
 
 #include "vinverse.h"
@@ -150,6 +149,8 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, 
 
     if constexpr (eclip)
     {
+        constexpr auto peak = std::numeric_limits<T>::max();
+
         for (int y = 0; y < height; ++y)
         {
             for (int x = 0; x < width; ++x)
@@ -173,8 +174,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, 
                         const int minm = srcp[x] - amnt_;
                         const int maxf = srcp[x] + amnt_;
 
-                        df = std::max(df, minm);
-                        dstp[x] = std::min(df, maxf);
+                        dstp[x] = std::clamp(std::clamp(df, minm, maxf), 0, static_cast<int>(peak));
                     }
                 }
                 else
@@ -190,8 +190,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, 
                     const int minm = srcp[x] - amnt_;
                     const int maxf = srcp[x] + amnt_;
 
-                    df = std::max(df, minm);
-                    dstp[x] = std::min(df, maxf);
+                    dstp[x] = std::clamp(std::clamp(df, minm, maxf), 0, static_cast<int>(peak));
                 }
             }
 
@@ -227,8 +226,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, 
                         const int minm = srcp[x] - amnt_;
                         const int maxf = srcp[x] + amnt_;
 
-                        df = std::max(df, minm);
-                        dstp[x] = std::min(df, maxf);
+                        dstp[x] = std::clamp(df, minm, maxf);
                     }
                 }
                 else
@@ -245,8 +243,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, 
                     const int minm = srcp[x] - amnt_;
                     const int maxf = srcp[x] + amnt_;
 
-                    df = std::max(df, minm);
-                    dstp[x] = std::min(df, maxf);
+                    dstp[x] = std::clamp(df, minm, maxf);
                 }
             }
 
@@ -260,7 +257,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_c(void* __restrict dstp_, 
 
 template <typename T, VinverseMode mode, bool eclip, bool thresh>
 Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, int uv, float scl, int opt, PClip clip2, int thr, IScriptEnvironment* env)
-    : GenericVideoFilter(child), sstr_(sstr), amnt_(amnt), uv_(uv), scl_(scl), opt_(opt), clip2_(clip2), thr_(thr), blur3_buffer(nullptr), blur6_buffer(nullptr)
+    : GenericVideoFilter(child), sstr_(sstr), amnt_(amnt), uv_(uv), scl_(scl), clip2_(clip2), thr_(thr), blur3_buffer(nullptr), blur6_buffer(nullptr)
 {
     if (!vi.IsPlanar())
         env->ThrowError("Vinverse: only planar input is supported!");
@@ -274,18 +271,18 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
         env->ThrowError("Vinverse: amnt must be greater than 0 and less than or equal to %s!", std::to_string(peak).c_str());
     if (uv < 1 || uv > 3)
         env->ThrowError("Vinverse: uv must be set to 1, 2, or 3!");
-    if (opt_ < -1 || opt_ > 3)
+    if (opt < -1 || opt > 3)
         env->ThrowError("Vinverse: opt must be between -1..3.");
 
-    avx512 = !!(env->GetCPUFlags() & CPUF_AVX512F);
-    avx2 = !!(env->GetCPUFlags() & CPUF_AVX2);
-    sse2 = !!(env->GetCPUFlags() & CPUF_SSE2);
+    const bool avx512 = !!(env->GetCPUFlags() & CPUF_AVX512F);
+    const bool avx2 = !!(env->GetCPUFlags() & CPUF_AVX2);
+    const bool sse2 = !!(env->GetCPUFlags() & CPUF_SSE2);
 
-    if (!avx512 && opt_ == 3)
+    if (!avx512 && opt == 3)
         env->ThrowError("Vinverse: opt=3 requires AVX512F.");
-    if (!avx2 && opt_ == 2)
+    if (!avx2 && opt == 2)
         env->ThrowError("Vinverse: opt=2 requires AVX2.");
-    if (!sse2 && opt_ == 1)
+    if (!sse2 && opt == 1)
         env->ThrowError("Vinverse: opt=1 requires SSE2.");
 
     if constexpr (eclip)
@@ -303,7 +300,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
     if (thr_ < 0 || thr_ > peak)
         env->ThrowError("Vinverse: thr must be between 0..%s!", std::to_string(peak).c_str());
 
-    if ((avx512 && opt_ < 0) || opt_ == 3)
+    if ((avx512 && opt < 0) || opt == 3)
     {
         pb_pitch = (vi.width + 63) & ~63;
 
@@ -350,7 +347,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
 
         fin_plane = &Vinverse::finalize_plane_avx512;
     }
-    else if ((avx2 && opt_ < 0) || opt_ == 2)
+    else if ((avx2 && opt < 0) || opt == 2)
     {
         pb_pitch = (vi.width + 31) & ~31;
 
@@ -397,7 +394,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
 
         fin_plane = &Vinverse::finalize_plane_avx2;
     }
-    else if ((sse2 && opt_ < 0) || opt_ == 1)
+    else if ((sse2 && opt < 0) || opt == 1)
     {
         pb_pitch = (vi.width + 15) & ~15;
 

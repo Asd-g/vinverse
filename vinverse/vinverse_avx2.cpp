@@ -564,7 +564,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
                             df_h = select(ch_hi, min(df_h, maxf_h), src_hi);
                         }
                         //
-                        auto result = compress_saturated(df_l, df_h);
+                        auto result = compress_saturated_s2u(df_l, df_h);
                         result.store(dstp + x);
                     }
                     else
@@ -638,7 +638,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
                         df_h = max(df_h, minm_h);
                         df_h = min(df_h, maxf_h);
                         //
-                        auto result = compress_saturated(df_l, df_h);
+                        auto result = compress_saturated_s2u(df_l, df_h);
                         result.store(dstp + x);
                     }
                 }
@@ -921,7 +921,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         Vec8i df_h;
 
-                        auto ch_hi = abs(d1i_hi) >= Vec16s(thr_);
+                        auto ch_hi = abs(d1i_hi) >= Vec8i(thr_);
 
                         int64_t check1_lo;
                         int64_t check1_hi;
