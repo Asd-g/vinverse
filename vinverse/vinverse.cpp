@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <limits>
 #include <string>
 
 #include "vinverse.h"
