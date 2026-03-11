@@ -49,7 +49,7 @@ static void copyPlane(void* __restrict dstp_, const int dstStride, const void* s
     }
 }
 
-template <typename T, int c>
+template <typename T>
 static void vertical_blur3_c(void* __restrict dstp_, const void* srcp_, int dst_pitch, int src_pitch, int width, int height) noexcept
 {
     const T* srcp = reinterpret_cast<const T*>(srcp_);
@@ -61,14 +61,14 @@ static void vertical_blur3_c(void* __restrict dstp_, const void* srcp_, int dst_
         const T* srcpn = y == height - 1 ? srcp - src_pitch : srcp + src_pitch;
 
         for (int x = 0; x < width; ++x)
-            dstp[x] = (srcpp[x] + (srcp[x] << 1) + srcpn[x] + c) >> 2;
+            dstp[x] = (srcpp[x] + (srcp[x] << 1) + srcpn[x] + 2) >> 2;
 
         srcp += src_pitch;
         dstp += dst_pitch;
     }
 }
 
-template <typename T, int c>
+template <typename T>
 static void vertical_blur5_c(void* __restrict dstp_, const void* srcp_, int dst_pitch, int src_pitch, int width, int height) noexcept
 {
     const T* srcp = reinterpret_cast<const T*>(srcp_);
@@ -82,7 +82,7 @@ static void vertical_blur5_c(void* __restrict dstp_, const void* srcp_, int dst_
         const T* srcpnn = y > height - 3 ? srcp - src_pitch * 2 : srcp + src_pitch * 2;
 
         for (int x = 0; x < width; ++x)
-            dstp[x] = (srcppp[x] + ((srcpp[x] + srcpn[x]) << 2) + srcp[x] * 6 + srcpnn[x] + c) >> 4;
+            dstp[x] = (srcppp[x] + ((srcpp[x] + srcpn[x]) << 2) + srcp[x] * 6 + srcpnn[x] + 8) >> 4;
 
         srcp += src_pitch;
         dstp += dst_pitch;
@@ -107,12 +107,12 @@ static void mt_makediff_c(void* __restrict dstp_, const void* c1p_, const void* 
     }
 }
 
-template <typename T, int c, int p, int h>
+template <typename T, int p, int h>
 static void vertical_sbr_c(void* __restrict dstp_, void* __restrict tempp_, const void* srcp_, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept
 {
-    vertical_blur3_c<T, c>(tempp_, srcp_, temp_pitch, src_pitch, width, height); //temp = rg11
+    vertical_blur3_c<T>(tempp_, srcp_, temp_pitch, src_pitch, width, height); //temp = rg11
     mt_makediff_c<T, p, h>(dstp_, srcp_, tempp_, dst_pitch, src_pitch, temp_pitch, width, height); //dst = rg11D
-    vertical_blur3_c<T, c>(tempp_, dstp_, temp_pitch, dst_pitch, width, height); //temp = rg11D.vblur()
+    vertical_blur3_c<T>(tempp_, dstp_, temp_pitch, dst_pitch, width, height); //temp = rg11D.vblur()
 
     const T* srcp = reinterpret_cast<const T*>(srcp_);
     T* __restrict tempp = reinterpret_cast<T*>(tempp_);
@@ -448,9 +448,9 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
 
         if (sizeof(T) == 1)
         {
-            blur3 = vertical_blur3_c<T, 2>;
-            blur5 = vertical_blur5_c<T, 8>;
-            sbr = vertical_sbr_c<T, 2, 255, 128>;
+            blur3 = vertical_blur3_c<T>;
+            blur5 = vertical_blur5_c<T>;
+            sbr = vertical_sbr_c<T, 255, 128>;
         }
         else
         {
@@ -458,30 +458,30 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
             {
                 case 10:
                 {
-                    blur3 = vertical_blur3_c<T, 8>;
-                    blur5 = vertical_blur5_c<T, 32>;
-                    sbr = vertical_sbr_c<T, 8, 1023, 512>;
+                    blur3 = vertical_blur3_c<T>;
+                    blur5 = vertical_blur5_c<T>;
+                    sbr = vertical_sbr_c<T, 1023, 512>;
                     break;
                 }
                 case 12:
                 {
-                    blur3 = vertical_blur3_c<T, 32>;
-                    blur5 = vertical_blur5_c<T, 128>;
-                    sbr = vertical_sbr_c<T, 32, 4095, 2048>;
+                    blur3 = vertical_blur3_c<T>;
+                    blur5 = vertical_blur5_c<T>;
+                    sbr = vertical_sbr_c<T, 4095, 2048>;
                     break;
                 }
                 case 14:
                 {
-                    blur3 = vertical_blur3_c<T, 128>;
-                    blur5 = vertical_blur5_c<T, 512>;
-                    sbr = vertical_sbr_c<T, 128, 16383, 8192>;
+                    blur3 = vertical_blur3_c<T>;
+                    blur5 = vertical_blur5_c<T>;
+                    sbr = vertical_sbr_c<T, 16383, 8192>;
                     break;
                 }
                 default:
                 {
-                    blur3 = vertical_blur3_c<T, 512>;
-                    blur5 = vertical_blur5_c<T, 2048>;
-                    sbr = vertical_sbr_c<T, 512, 65535, 32768>;
+                    blur3 = vertical_blur3_c<T>;
+                    blur5 = vertical_blur5_c<T>;
+                    sbr = vertical_sbr_c<T, 65535, 32768>;
                     break;
                 }
             }
