@@ -138,12 +138,10 @@ static void mt_makediff_avx512_8(void* __restrict dstp_, const void* c1p_, const
             auto c1 = Vec64uc().load(c1p + x);
             auto c2 = Vec64uc().load(c2p + x);
 
-            c1 = c1 - v128;
-            c2 = c2 - v128;
-
-            auto diff = c1 - c2;
-            diff = diff + v128;
-            diff.store(dstp + x);
+            auto diff1 = sub_saturated(c1, c2);
+            auto diff2 = sub_saturated(c2, c1);
+            auto res = sub_saturated(add_saturated(v128, diff1), diff2);
+            res.store(dstp + x);
         }
 
         dstp += dst_pitch;
@@ -347,12 +345,10 @@ static void mt_makediff_avx512_16(void* __restrict dstp_, const void* c1p_, cons
             auto c1 = Vec32us().load(c1p + x);
             auto c2 = Vec32us().load(c2p + x);
 
-            c1 = c1 - v128;
-            c2 = c2 - v128;
-
-            auto diff = c1 - c2;
-            diff = diff + v128;
-            diff.store(dstp + x);
+            auto diff1 = sub_saturated(c1, c2);
+            auto diff2 = sub_saturated(c2, c1);
+            auto res = sub_saturated(add_saturated(v128, diff1), diff2);
+            res.store(dstp + x);
         }
 
         dstp += dst_pitch;

@@ -138,12 +138,10 @@ static void mt_makediff_sse2_8(void* __restrict dstp_, const void* c1p_, const v
             auto c1 = Vec16uc().load(c1p + x);
             auto c2 = Vec16uc().load(c2p + x);
 
-            c1 = c1 - v128;
-            c2 = c2 - v128;
-
-            auto diff = c1 - c2;
-            diff = diff + v128;
-            diff.store(dstp + x);
+            auto diff1 = sub_saturated(c1, c2);
+            auto diff2 = sub_saturated(c2, c1);
+            auto res = sub_saturated(add_saturated(v128, diff1), diff2);
+            res.store(dstp + x);
         }
 
         dstp += dst_pitch;
@@ -333,12 +331,10 @@ static void mt_makediff_sse2_16(void* __restrict dstp_, const void* c1p_, const 
             auto c1 = Vec8us().load(c1p + x);
             auto c2 = Vec8us().load(c2p + x);
 
-            c1 = c1 - v128;
-            c2 = c2 - v128;
-
-            auto diff = c1 - c2;
-            diff = diff + v128;
-            diff.store(dstp + x);
+            auto diff1 = sub_saturated(c1, c2);
+            auto diff2 = sub_saturated(c2, c1);
+            auto res = sub_saturated(add_saturated(v128, diff1), diff2);
+            res.store(dstp + x);
         }
 
         dstp += dst_pitch;
