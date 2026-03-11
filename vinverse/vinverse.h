@@ -53,29 +53,25 @@ void vertical_blur3_sse2_8(void* __restrict dstp, const void* srcp, int dst_pitc
 void vertical_blur5_sse2_8(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
 void vertical_sbr_sse2_8(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
 
-template <int c>
 void vertical_blur3_sse2_16(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template <int c>
 void vertical_blur5_sse2_16(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template <int c, int h, uint32_t u>
+template <int h, uint32_t u>
 void vertical_sbr_sse2_16(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
 
 void vertical_blur3_avx2_8(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
 void vertical_blur5_avx2_8(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
 void vertical_sbr_avx2_8(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
-template <int c>
+
 void vertical_blur3_avx2_16(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template <int c>
 void vertical_blur5_avx2_16(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template <int c, int h, uint32_t u>
+template <int h, uint32_t u>
 void vertical_sbr_avx2_16(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
 
 void vertical_blur3_avx512_8(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
 void vertical_blur5_avx512_8(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
 void vertical_sbr_avx512_8(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
-template <int c>
+
 void vertical_blur3_avx512_16(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template <int c>
 void vertical_blur5_avx512_16(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template <int c, int h, uint32_t u>
+template <int h, uint32_t u>
 void vertical_sbr_avx512_16(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;

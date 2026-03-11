@@ -317,30 +317,30 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
             {
                 case 10:
                 {
-                    blur3 = vertical_blur3_avx512_16<8>;
-                    blur5 = vertical_blur5_avx512_16<32>;
-                    sbr = vertical_sbr_avx512_16<8, 512, 0x200200>;
+                    blur3 = vertical_blur3_avx512_16;
+                    blur5 = vertical_blur5_avx512_16;
+                    sbr = vertical_sbr_avx512_16<512, 0x200200>;
                     break;
                 }
                 case 12:
                 {
-                    blur3 = vertical_blur3_avx512_16<32>;
-                    blur5 = vertical_blur5_avx512_16<128>;
-                    sbr = vertical_sbr_avx512_16<32, 2048, 0x800800>;
+                    blur3 = vertical_blur3_avx512_16;
+                    blur5 = vertical_blur5_avx512_16;
+                    sbr = vertical_sbr_avx512_16<2048, 0x800800>;
                     break;
                 }
                 case 14:
                 {
-                    blur3 = vertical_blur3_avx512_16<128>;
-                    blur5 = vertical_blur5_avx512_16<512>;
-                    sbr = vertical_sbr_avx512_16<128, 8192, 0x20002000>;
+                    blur3 = vertical_blur3_avx512_16;
+                    blur5 = vertical_blur5_avx512_16;
+                    sbr = vertical_sbr_avx512_16<8192, 0x20002000>;
                     break;
                 }
                 default:
                 {
-                    blur3 = vertical_blur3_avx512_16<512>;
-                    blur5 = vertical_blur5_avx512_16<2048>;
-                    sbr = vertical_sbr_avx512_16<512, 32768, 0x80008000>;
+                    blur3 = vertical_blur3_avx512_16;
+                    blur5 = vertical_blur5_avx512_16;
+                    sbr = vertical_sbr_avx512_16<32768, 0x80008000>;
                     break;
                 }
             }
@@ -364,30 +364,30 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
             {
                 case 10:
                 {
-                    blur3 = vertical_blur3_avx2_16<8>;
-                    blur5 = vertical_blur5_avx2_16<32>;
-                    sbr = vertical_sbr_avx2_16<8, 512, 0x200200>;
+                    blur3 = vertical_blur3_avx2_16;
+                    blur5 = vertical_blur5_avx2_16;
+                    sbr = vertical_sbr_avx2_16<512, 0x200200>;
                     break;
                 }
                 case 12:
                 {
-                    blur3 = vertical_blur3_avx2_16<32>;
-                    blur5 = vertical_blur5_avx2_16<128>;
-                    sbr = vertical_sbr_avx2_16<32, 2048, 0x800800>;
+                    blur3 = vertical_blur3_avx2_16;
+                    blur5 = vertical_blur5_avx2_16;
+                    sbr = vertical_sbr_avx2_16<2048, 0x800800>;
                     break;
                 }
                 case 14:
                 {
-                    blur3 = vertical_blur3_avx2_16<128>;
-                    blur5 = vertical_blur5_avx2_16<512>;
-                    sbr = vertical_sbr_avx2_16<128, 8192, 0x20002000>;
+                    blur3 = vertical_blur3_avx2_16;
+                    blur5 = vertical_blur5_avx2_16;
+                    sbr = vertical_sbr_avx2_16<8192, 0x20002000>;
                     break;
                 }
                 default:
                 {
-                    blur3 = vertical_blur3_avx2_16<512>;
-                    blur5 = vertical_blur5_avx2_16<2048>;
-                    sbr = vertical_sbr_avx2_16<512, 32768, 0x80008000>;
+                    blur3 = vertical_blur3_avx2_16;
+                    blur5 = vertical_blur5_avx2_16;
+                    sbr = vertical_sbr_avx2_16<32768, 0x80008000>;
                     break;
                 }
             }
@@ -411,30 +411,30 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
             {
                 case 10:
                 {
-                    blur3 = vertical_blur3_sse2_16<8>;
-                    blur5 = vertical_blur5_sse2_16<32>;
-                    sbr = vertical_sbr_sse2_16<8, 512, 0x200200>;
+                    blur3 = vertical_blur3_sse2_16;
+                    blur5 = vertical_blur5_sse2_16;
+                    sbr = vertical_sbr_sse2_16<512, 0x200200>;
                     break;
                 }
                 case 12:
                 {
-                    blur3 = vertical_blur3_sse2_16<32>;
-                    blur5 = vertical_blur5_sse2_16<128>;
-                    sbr = vertical_sbr_sse2_16<32, 2048, 0x800800>;
+                    blur3 = vertical_blur3_sse2_16;
+                    blur5 = vertical_blur5_sse2_16;
+                    sbr = vertical_sbr_sse2_16<2048, 0x800800>;
                     break;
                 }
                 case 14:
                 {
-                    blur3 = vertical_blur3_sse2_16<128>;
-                    blur5 = vertical_blur5_sse2_16<512>;
-                    sbr = vertical_sbr_sse2_16<128, 8192, 0x20002000>;
+                    blur3 = vertical_blur3_sse2_16;
+                    blur5 = vertical_blur5_sse2_16;
+                    sbr = vertical_sbr_sse2_16<8192, 0x20002000>;
                     break;
                 }
                 default:
                 {
-                    blur3 = vertical_blur3_sse2_16<512>;
-                    blur5 = vertical_blur5_sse2_16<2048>;
-                    sbr = vertical_sbr_sse2_16<512, 32768, 0x80008000>;
+                    blur3 = vertical_blur3_sse2_16;
+                    blur5 = vertical_blur5_sse2_16;
+                    sbr = vertical_sbr_sse2_16<32768, 0x80008000>;
                     break;
                 }
             }

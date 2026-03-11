@@ -198,7 +198,7 @@ void vertical_sbr_avx2_8(void* __restrict dstp_, void* __restrict tempp_, const 
             auto desired_hi = src_hi - t_hi;
             auto otherwise_hi = (src_hi - dst_hi) + v128;
             auto result_hi = select(nochange_mask_hi, src_hi, select(t_mask_hi, desired_hi, otherwise_hi));
-            // 
+            //
             auto result = compress_saturated(result_lo, result_hi);
             result.store(dstp + x);
         }
@@ -209,7 +209,6 @@ void vertical_sbr_avx2_8(void* __restrict dstp_, void* __restrict tempp_, const 
     }
 }
 
-template <int c_>
 void vertical_blur3_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_pitch, int src_pitch, int width, int height) noexcept
 {
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
@@ -217,7 +216,7 @@ void vertical_blur3_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
 
     const int mod16_width = (width + 15) & ~15;
 
-    auto two = Vec8ui(c_);
+    auto two = Vec8ui(2);
 
     for (int y = 0; y < height; ++y)
     {
@@ -261,12 +260,6 @@ void vertical_blur3_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     }
 }
 
-template void vertical_blur3_avx2_16<8>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_blur3_avx2_16<32>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_blur3_avx2_16<128>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_blur3_avx2_16<512>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-
-template <int c_>
 void vertical_blur5_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_pitch, int src_pitch, int width, int height) noexcept
 {
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
@@ -275,7 +268,7 @@ void vertical_blur5_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     const int mod16_width = (width + 15) & ~15;
 
     auto six = Vec8ui(6);
-    auto eight = Vec8ui(c_);
+    auto eight = Vec8ui(8);
 
     for (int y = 0; y < height; ++y)
     {
@@ -336,11 +329,6 @@ void vertical_blur5_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     }
 }
 
-template void vertical_blur5_avx2_16<32>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_blur5_avx2_16<128>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_blur5_avx2_16<512>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_blur5_avx2_16<2048>(void* __restrict dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
-
 template <uint32_t u>
 static void mt_makediff_avx2_16(void* __restrict dstp_, const void* c1p_, const void* c2p_, int dst_pitch, int c1_pitch, int c2_pitch, int width, int height) noexcept
 {
@@ -373,12 +361,12 @@ static void mt_makediff_avx2_16(void* __restrict dstp_, const void* c1p_, const 
     }
 }
 
-template <int c, int h, uint32_t u>
+template <int h, uint32_t u>
 void vertical_sbr_avx2_16(void* __restrict dstp_, void* __restrict tempp_, const void* srcp_, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept
 {
-    vertical_blur3_avx2_16<c>(tempp_, srcp_, temp_pitch, src_pitch, width, height); //temp = rg11
+    vertical_blur3_avx2_16(tempp_, srcp_, temp_pitch, src_pitch, width, height); //temp = rg11
     mt_makediff_avx2_16<u>(dstp_, srcp_, tempp_, dst_pitch, src_pitch, temp_pitch, width, height); //dst = rg11D
-    vertical_blur3_avx2_16<c>(tempp_, dstp_, temp_pitch, dst_pitch, width, height); //temp = rg11D.vblur()
+    vertical_blur3_avx2_16(tempp_, dstp_, temp_pitch, dst_pitch, width, height); //temp = rg11D.vblur()
 
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
     uint16_t* __restrict tempp = reinterpret_cast<uint16_t*>(tempp_);
@@ -420,7 +408,7 @@ void vertical_sbr_avx2_16(void* __restrict dstp_, void* __restrict tempp_, const
             auto desired_hi = src_hi - t_hi;
             auto otherwise_hi = (src_hi - dst_hi) + v128;
             auto result_hi = select(nochange_mask_hi, src_hi, select(t_mask_hi, desired_hi, otherwise_hi));
-            // 
+            //
             auto result = compress_saturated(result_lo, result_hi);
             result.store(dstp + x);
         }
@@ -431,10 +419,10 @@ void vertical_sbr_avx2_16(void* __restrict dstp_, void* __restrict tempp_, const
     }
 }
 
-template void vertical_sbr_avx2_16<8, 512, 0x200200>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_sbr_avx2_16<32, 2048, 0x800800>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_sbr_avx2_16<128, 8192, 0x20002000>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
-template void vertical_sbr_avx2_16<512, 32768, 0x80008000>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
+template void vertical_sbr_avx2_16<512, 0x200200>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
+template void vertical_sbr_avx2_16<2048, 0x800800>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
+template void vertical_sbr_avx2_16<8192, 0x20002000>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
+template void vertical_sbr_avx2_16<32768, 0x80008000>(void* __restrict dstp, void* __restrict tempp, const void* srcp, int dst_pitch, int temp_pitch, int src_pitch, int width, int height) noexcept;
 
 template <typename T, VinverseMode mode, bool eclip, bool thresh>
 void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept
