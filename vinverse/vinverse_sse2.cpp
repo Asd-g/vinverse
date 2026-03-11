@@ -6,7 +6,7 @@ void vertical_blur3_sse2_8(void* __restrict dstp_, const void* srcp_, int dst_pi
     const uint8_t* srcp = reinterpret_cast<const uint8_t*>(srcp_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod16_width = (width + 15) & ~15;
+    const int mod16_width = (width + 15) & ~15;
 
     auto two = Vec8us(2);
 
@@ -57,7 +57,7 @@ void vertical_blur5_sse2_8(void* __restrict dstp_, const void* srcp_, int dst_pi
     const uint8_t* srcp = reinterpret_cast<const uint8_t*>(srcp_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod16_width = (width + 15) & ~15;
+    const int mod16_width = (width + 15) & ~15;
 
     auto six = Vec8us(6);
     auto eight = Vec8us(8);
@@ -127,7 +127,7 @@ static void mt_makediff_sse2_8(void* __restrict dstp_, const void* c1p_, const v
     const uint8_t* c2p = reinterpret_cast<const uint8_t*>(c2p_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod16_width = (width + 15) & ~15;
+    const int mod16_width = (width + 15) & ~15;
 
     auto v128 = Vec16uc(0x80808080);
 
@@ -201,7 +201,7 @@ void vertical_blur3_sse2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod16_width = (width + 15) & ~15;
+    const int mod8_width = (width + 7) & ~7;
 
     auto two = Vec4ui(c_);
 
@@ -210,7 +210,7 @@ void vertical_blur3_sse2_16(void* __restrict dstp_, const void* srcp_, int dst_p
         const uint16_t* srcpp = y == 0 ? srcp + src_pitch : srcp - src_pitch;
         const uint16_t* srcpn = y == height - 1 ? srcp - src_pitch : srcp + src_pitch;
 
-        for (int x = 0; x < mod16_width; x += 8)
+        for (int x = 0; x < mod8_width; x += 8)
         {
             auto p = Vec8us().load(srcpp + x);
             auto c = Vec8us().load(srcp + x);
@@ -258,7 +258,7 @@ void vertical_blur5_sse2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod16_width = (width + 15) & ~15;
+    const int mod8_width = (width + 7) & ~7;
 
     auto six = Vec4ui(6);
     auto eight = Vec4ui(c_);
@@ -270,7 +270,7 @@ void vertical_blur5_sse2_16(void* __restrict dstp_, const void* srcp_, int dst_p
         const uint16_t* srcpn = y == height - 1 ? srcp - src_pitch : srcp + src_pitch;
         const uint16_t* srcpnn = y > height - 3 ? srcp - src_pitch * 2 : srcp + src_pitch * 2;
 
-        for (int x = 0; x < mod16_width; x += 8)
+        for (int x = 0; x < mod8_width; x += 8)
         {
             auto p2 = Vec8us().load(srcppp + x);
             auto p1 = Vec8us().load(srcpp + x);
@@ -334,13 +334,13 @@ static void mt_makediff_sse2_16(void* __restrict dstp_, const void* c1p_, const 
     const uint16_t* c2p = reinterpret_cast<const uint16_t*>(c2p_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod16_width = (width + 15) & ~15;
+    const int mod8_width = (width + 7) & ~7;
 
     auto v128 = Vec8us(u);
 
     for (int y = 0; y < height; ++y)
     {
-        for (int x = 0; x < mod16_width; x += 8)
+        for (int x = 0; x < mod8_width; x += 8)
         {
             auto c1 = Vec8us().load(c1p + x);
             auto c2 = Vec8us().load(c2p + x);

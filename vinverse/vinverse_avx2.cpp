@@ -6,7 +6,7 @@ void vertical_blur3_avx2_8(void* __restrict dstp_, const void* srcp_, int dst_pi
     const uint8_t* srcp = reinterpret_cast<const uint8_t*>(srcp_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod32_width = (width + 31) & ~31;
 
     auto two = Vec16us(2);
 
@@ -57,7 +57,7 @@ void vertical_blur5_avx2_8(void* __restrict dstp_, const void* srcp_, int dst_pi
     const uint8_t* srcp = reinterpret_cast<const uint8_t*>(srcp_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod32_width = (width + 31) & ~31;
 
     auto six = Vec16us(6);
     auto eight = Vec16us(8);
@@ -127,7 +127,7 @@ static void mt_makediff_avx2_8(void* __restrict dstp_, const void* c1p_, const v
     const uint8_t* c2p = reinterpret_cast<const uint8_t*>(c2p_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod32_width = (width + 31) & ~31;
 
     auto v128 = Vec32uc(0x80808080);
 
@@ -162,7 +162,7 @@ void vertical_sbr_avx2_8(void* __restrict dstp_, void* __restrict tempp_, const 
     uint8_t* __restrict tempp = reinterpret_cast<uint8_t*>(tempp_);
     uint8_t* __restrict dstp = reinterpret_cast<uint8_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod32_width = (width + 31) & ~31;
 
     Vec16s zero = zero_si256();
     auto v128 = Vec16us(128);
@@ -215,7 +215,7 @@ void vertical_blur3_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod16_width = (width + 15) & ~15;
 
     auto two = Vec8ui(c_);
 
@@ -224,7 +224,7 @@ void vertical_blur3_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
         const uint16_t* srcpp = y == 0 ? srcp + src_pitch : srcp - src_pitch;
         const uint16_t* srcpn = y == height - 1 ? srcp - src_pitch : srcp + src_pitch;
 
-        for (int x = 0; x < mod32_width; x += 16)
+        for (int x = 0; x < mod16_width; x += 16)
         {
             auto p = Vec16us().load(srcpp + x);
             auto c = Vec16us().load(srcp + x);
@@ -272,7 +272,7 @@ void vertical_blur5_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
     const uint16_t* srcp = reinterpret_cast<const uint16_t*>(srcp_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod16_width = (width + 15) & ~15;
 
     auto six = Vec8ui(6);
     auto eight = Vec8ui(c_);
@@ -284,7 +284,7 @@ void vertical_blur5_avx2_16(void* __restrict dstp_, const void* srcp_, int dst_p
         const uint16_t* srcpn = y == height - 1 ? srcp - src_pitch : srcp + src_pitch;
         const uint16_t* srcpnn = y > height - 3 ? srcp - src_pitch * 2 : srcp + src_pitch * 2;
 
-        for (int x = 0; x < mod32_width; x += 16)
+        for (int x = 0; x < mod16_width; x += 16)
         {
             auto p2 = Vec16us().load(srcppp + x);
             auto p1 = Vec16us().load(srcpp + x);
@@ -348,13 +348,13 @@ static void mt_makediff_avx2_16(void* __restrict dstp_, const void* c1p_, const 
     const uint16_t* c2p = reinterpret_cast<const uint16_t*>(c2p_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod16_width = (width + 15) & ~15;
 
     auto v128 = Vec16us(u);
 
     for (int y = 0; y < height; ++y)
     {
-        for (int x = 0; x < mod32_width; x += 16)
+        for (int x = 0; x < mod16_width; x += 16)
         {
             auto c1 = Vec16us().load(c1p + x);
             auto c2 = Vec16us().load(c2p + x);
@@ -384,14 +384,14 @@ void vertical_sbr_avx2_16(void* __restrict dstp_, void* __restrict tempp_, const
     uint16_t* __restrict tempp = reinterpret_cast<uint16_t*>(tempp_);
     uint16_t* __restrict dstp = reinterpret_cast<uint16_t*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod16_width = (width + 15) & ~15;
 
     Vec8i zero = zero_si256();
     auto v128 = Vec8ui(h);
 
     for (int y = 0; y < height; ++y)
     {
-        for (int x = 0; x < mod32_width; x += 16)
+        for (int x = 0; x < mod16_width; x += 16)
         {
             auto dst_lo = extend_low(Vec16us().load(dstp + x));
             auto temp_lo = extend_low(Vec16us().load(tempp + x));
@@ -444,7 +444,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
     const T* pb6 = reinterpret_cast<const T*>(pb6_);
     T* __restrict dstp = reinterpret_cast<T*>(dstp_);
 
-    int mod32_width = (width + 31) & ~31;
+    const int mod32_width = (width + 31) & ~31;
 
     if constexpr (std::is_same_v<T, uint8_t>)
     {
@@ -470,12 +470,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_lo = abs(d1i_lo) >= Vec16s(thr_);
 
-                        int64_t check_lo;
-                        int64_t check_hi;
-                        compress_saturated(ch_lo.get_low(), zero_si128()).storel(&check_lo);
-                        compress_saturated(ch_lo.get_high(), zero_si128()).storel(&check_hi);
-
-                        if (!check_lo && !check_hi)
+                        if (!to_bits(ch_lo))
                             df_l = src_lo;
                         else
                         {
@@ -522,12 +517,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_hi = abs(d1i_hi) >= Vec16s(thr_);
 
-                        int64_t check1_lo;
-                        int64_t check1_hi;
-                        compress_saturated(ch_hi.get_low(), ch_hi.get_low()).storel(&check1_lo);
-                        compress_saturated(ch_hi.get_high(), ch_hi.get_high()).storel(&check1_hi);
-
-                        if (!check1_lo && !check1_hi)
+                        if (!to_bits(ch_hi))
                             df_h = src_hi;
                         else
                         {
@@ -667,12 +657,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_lo = abs(d1i_lo) >= Vec16s(thr_);
 
-                        int64_t check_lo;
-                        int64_t check_hi;
-                        compress_saturated(ch_lo.get_low(), zero_si128()).storel(&check_lo);
-                        compress_saturated(ch_lo.get_high(), zero_si128()).storel(&check_hi);
-
-                        if (!check_lo && !check_hi)
+                        if (!to_bits(ch_lo))
                             df_l = src_lo;
                         else
                         {
@@ -722,12 +707,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_hi = abs(d1i_hi) >= Vec16s(thr_);
 
-                        int64_t check1_lo;
-                        int64_t check1_hi;
-                        compress_saturated(ch_hi.get_low(), ch_hi.get_low()).storel(&check1_lo);
-                        compress_saturated(ch_hi.get_high(), ch_hi.get_high()).storel(&check1_hi);
-
-                        if (!check1_lo && !check1_hi)
+                        if (!to_bits(ch_hi))
                             df_h = src_hi;
                         else
                         {
@@ -865,11 +845,13 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
         auto scl_vector = Vec8f(scl_);
         auto amnt_vector = Vec8i(amnt_);
 
+        const int mod16_width = (width + 15) & ~15;
+
         if constexpr (eclip)
         {
             for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < mod32_width; x += 16)
+                for (int x = 0; x < mod16_width; x += 16)
                 {
                     auto b3_lo = extend_low(Vec16us().load(pb3 + x));
                     auto b6_lo = extend_low(Vec16us().load(pb6 + x));
@@ -883,12 +865,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_lo = abs(d1i_lo) >= Vec8i(thr_);
 
-                        int64_t check_lo;
-                        int64_t check_hi;
-                        compress_saturated(ch_lo.get_low(), zero_si128()).storel(&check_lo);
-                        compress_saturated(ch_lo.get_high(), zero_si128()).storel(&check_hi);
-
-                        if (!check_lo && !check_hi)
+                        if (!to_bits(ch_lo))
                             df_l = src_lo;
                         else
                         {
@@ -923,12 +900,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_hi = abs(d1i_hi) >= Vec8i(thr_);
 
-                        int64_t check1_lo;
-                        int64_t check1_hi;
-                        compress_saturated(ch_hi.get_low(), ch_hi.get_low()).storel(&check1_lo);
-                        compress_saturated(ch_hi.get_high(), ch_hi.get_high()).storel(&check1_hi);
-
-                        if (!check1_lo && !check1_hi)
+                        if (!to_bits(ch_hi))
                             df_h = src_hi;
                         else
                         {
@@ -1018,7 +990,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
         {
             for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < mod32_width; x += 16)
+                for (int x = 0; x < mod16_width; x += 16)
                 {
                     auto b3_lo = extend_low(Vec16us().load(pb3 + x));
                     auto b6_lo = extend_low(Vec16us().load(pb6 + x));
@@ -1032,12 +1004,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_lo = abs(d1i_lo) >= Vec8i(thr_);
 
-                        int64_t check_lo;
-                        int64_t check_hi;
-                        compress_saturated(ch_lo.get_low(), zero_si128()).storel(&check_lo);
-                        compress_saturated(ch_lo.get_high(), zero_si128()).storel(&check_hi);
-
-                        if (!check_lo && !check_hi)
+                        if (!to_bits(ch_lo))
                             df_l = src_lo;
                         else
                         {
@@ -1073,12 +1040,7 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_avx2(void* __restrict dstp
 
                         auto ch_hi = abs(d1i_hi) >= Vec16s(thr_);
 
-                        int64_t check1_lo;
-                        int64_t check1_hi;
-                        compress_saturated(ch_hi.get_low(), ch_hi.get_low()).storel(&check1_lo);
-                        compress_saturated(ch_hi.get_high(), ch_hi.get_high()).storel(&check1_hi);
-
-                        if (!check1_lo && !check1_hi)
+                        if (!to_bits(ch_hi))
                             df_h = src_hi;
                         else
                         {
