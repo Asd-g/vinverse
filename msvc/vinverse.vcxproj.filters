@@ -30,6 +30,12 @@
     <ClCompile Include="..\vinverse\vinverse_avx512.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\vinverse\vinverse_scalar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vinverse\vinverse_vs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\vinverse\vcl2\instrset.h">
@@ -93,6 +99,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\vinverse\vinverse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vinverse\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vinverse\vinverse_vs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vinverse\plugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

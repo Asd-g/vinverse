@@ -12,11 +12,20 @@ This plugin also includes a fast implementation of [Vinverse2 function](https://
 
 ### Usage:
 
+#### AviSynth:
 ```
 vinverse (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt", clip "clip2", int "thr")
 ```
 ```
 vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt")
+```
+
+#### VapourSynth:
+```
+vinverse.vinverse (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt", clip "clip2", int "thr")
+```
+```
+vinverse.vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt")
 ```
 
 ### Parameters:
@@ -36,7 +45,7 @@ vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl", int "opt
 
 - uv\
     Chroma mode.\
-    1: Return garbage.\
+    1: Return garbage. (VapourSynth: equivalent of `2`)\
     2: Copy plane.\
     3: Process plane.\
     Default: 3.

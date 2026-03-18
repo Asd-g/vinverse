@@ -1,4 +1,4 @@
-#include "vinverse.h"
+#include "plugin.h"
 #include "VCL2/vectorclass.h"
 
 void vertical_blur3_sse2_8(void* __restrict dstp_, const void* srcp_, int dst_pitch, int src_pitch, int width, int height) noexcept

@@ -28,7 +28,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -38,7 +38,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -71,7 +71,7 @@
     <IncludePath>..\..\AviSynthPlus\avs_core\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\..\AviSynthPlus\avs_core\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\vapoursynth-master\include;..\..\AviSynthPlus\avs_core\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -160,9 +160,13 @@
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="..\vinverse\vinverse_scalar.cpp" />
     <ClCompile Include="..\vinverse\vinverse_sse2.cpp" />
+    <ClCompile Include="..\vinverse\vinverse_vs.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\vinverse\common.h" />
+    <ClInclude Include="..\vinverse\plugin.h" />
     <ClInclude Include="..\vinverse\vcl2\instrset.h" />
     <ClInclude Include="..\vinverse\vcl2\vectorclass.h" />
     <ClInclude Include="..\vinverse\vcl2\vectorf128.h" />
@@ -184,6 +188,7 @@
     <ClInclude Include="..\vinverse\vcl2\vectormath_trig.h" />
     <ClInclude Include="..\vinverse\vcl2\vector_convert.h" />
     <ClInclude Include="..\vinverse\vinverse.h" />
+    <ClInclude Include="..\vinverse\vinverse_vs.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\vinverse\vinverse.rc" />
