@@ -2,5 +2,10 @@
 
 #include <type_traits>
 
-//#include "vinverse.h"
+#ifdef AVS_PLUGIN
+#include "vinverse.h"
+#endif // AVS_PLUGIN
+
+#ifdef VS_PLUGIN
 #include "vinverse_vs.h"
+#endif // VS_PLUGIN

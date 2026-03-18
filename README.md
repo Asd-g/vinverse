@@ -83,15 +83,11 @@ vinverse.vinverse2 (clip input, float "sstr", int "amnt", int "uv", float "scl",
     Requirements:
         - Git
         - C++17 compiler
-        - CMake >= 3.16
+        - CMake >= 3.25
     ```
     ```
     git clone https://github.com/Asd-g/vinverse && \
     cd vinverse && \
-    mkdir build && \
-    cd build && \
-
-    cmake ..
-    make -j$(nproc)
-    sudo make install
+    cmake -B build  && \
+    cmake --build build
     ```
