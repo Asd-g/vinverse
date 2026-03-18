@@ -449,8 +449,8 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_sse2(void* __restrict dstp
                             auto desired_lo = da_lo * scl_vector;
                             auto desired_hi = da_hi * scl_vector;
 
-                            auto fin_mask_lo = (d1_lo * d2_lo) < 0.0f;
-                            auto fin_mask_hi = (d1_hi * d2_hi) < 0.0f;
+                            auto fin_mask_lo = sign_bit(d1_lo ^ d2_lo);
+                            auto fin_mask_hi = sign_bit(d1_hi ^ d2_hi);
 
                             auto add_lo = truncatei(select(fin_mask_lo, desired_lo, da_lo));
                             auto add_hi = truncatei(select(fin_mask_hi, desired_hi, da_hi));
@@ -486,8 +486,8 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_sse2(void* __restrict dstp
                         auto desired_lo = da_lo * scl_vector;
                         auto desired_hi = da_hi * scl_vector;
 
-                        auto fin_mask_lo = (d1_lo * d2_lo) < 0.0f;
-                        auto fin_mask_hi = (d1_hi * d2_hi) < 0.0f;
+                        auto fin_mask_lo = sign_bit(d1_lo ^ d2_lo);
+                        auto fin_mask_hi = sign_bit(d1_hi ^ d2_hi);
 
                         auto add_lo = truncatei(select(fin_mask_lo, desired_lo, da_lo));
                         auto add_hi = truncatei(select(fin_mask_hi, desired_hi, da_hi));
@@ -555,8 +555,8 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_sse2(void* __restrict dstp
                             auto desired_lo = da_lo * scl_vector;
                             auto desired_hi = da_hi * scl_vector;
 
-                            auto fin_mask_lo = (d1_lo * t_lo) < 0.0f;
-                            auto fin_mask_hi = (d1_hi * t_hi) < 0.0f;
+                            auto fin_mask_lo = sign_bit(d1_lo ^ t_lo);
+                            auto fin_mask_hi = sign_bit(d1_hi ^ t_hi);
 
                             auto add_lo = truncatei(select(fin_mask_lo, desired_lo, da_lo));
                             auto add_hi = truncatei(select(fin_mask_hi, desired_hi, da_hi));
@@ -595,8 +595,8 @@ void Vinverse<T, mode, eclip, thresh>::finalize_plane_sse2(void* __restrict dstp
                         auto desired_lo = da_lo * scl_vector;
                         auto desired_hi = da_hi * scl_vector;
 
-                        auto fin_mask_lo = (d1_lo * t_lo) < 0.0f;
-                        auto fin_mask_hi = (d1_hi * t_hi) < 0.0f;
+                        auto fin_mask_lo = sign_bit(d1_lo ^ t_lo);
+                        auto fin_mask_hi = sign_bit(d1_hi ^ t_hi);
 
                         auto add_lo = truncatei(select(fin_mask_lo, desired_lo, da_lo));
                         auto add_hi = truncatei(select(fin_mask_hi, desired_hi, da_hi));
