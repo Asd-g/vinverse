@@ -1,3 +1,7 @@
+##### 0.9.5:
+    SIMD: fixed high bit depth.
+    Added VapourSynth support.
+
 ##### 0.9.4:
     Fixed overflow when `clip2` is used.
 
