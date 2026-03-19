@@ -33,6 +33,40 @@ const VSFrame* VS_CC vinverse_get_frame(int n, int activationReason, void* insta
 
         VSFrame* dst = vsapi->newVideoFrame2(fmt, vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), planeSrc, planes, src, core);
 
+        struct AlignedBuffer
+        {
+            void* ptr = nullptr;
+            size_t size = 0;
+
+            ~AlignedBuffer()
+            {
+                if (ptr)
+                    vsh::vsh_aligned_free(ptr);
+            }
+
+            void* get(size_t req_size)
+            {
+                if (size < req_size)
+                {
+                    if (ptr)
+                        vsh::vsh_aligned_free(ptr);
+
+                    ptr = vsh::vsh_aligned_malloc(req_size, 64);
+                    size = req_size;
+                }
+
+                return ptr;
+            }
+        };
+
+        thread_local AlignedBuffer tl_buf;
+
+        const int max_height = vsapi->getFrameHeight(src, 0);
+        const size_t max_pbuf_size = max_height * d->pb_pitch;
+
+        T* blur3_buf = static_cast<T*>(tl_buf.get(max_pbuf_size * 2 * sizeof(T)));
+        T* blur6_buf = blur3_buf + max_pbuf_size;
+
         for (int plane = 0; plane < fmt->numPlanes; ++plane)
         {
             if (planeSrc[plane] != nullptr)
@@ -42,24 +76,6 @@ const VSFrame* VS_CC vinverse_get_frame(int n, int activationReason, void* insta
             const int height = vsapi->getFrameHeight(src, plane);
             const int src_pitch = static_cast<int>(vsapi->getStride(src, plane) / sizeof(T));
             const int dst_pitch = static_cast<int>(vsapi->getStride(dst, plane) / sizeof(T));
-
-            size_t pbuf_size = height * d->pb_pitch;
-            auto deleter = [](T* ptr) { vsh::vsh_aligned_free(ptr); };
-            std::unique_ptr<T[], decltype(deleter)> buffer(
-                static_cast<T*>(vsh::vsh_aligned_malloc(pbuf_size * 2 * sizeof(T), 64)), deleter);
-
-            if (!buffer) {
-                vsapi->setFilterError("Vinverse: memory allocation failed", frameCtx);
-                vsapi->freeFrame(src);
-                if constexpr (eclip)
-                    vsapi->freeFrame(clip2);
-
-                vsapi->freeFrame(dst);
-                return nullptr;
-            }
-
-            T* blur3_buf = buffer.get();
-            T* blur6_buf = blur3_buf + pbuf_size;
 
             const uint8_t* srcp = vsapi->getReadPtr(src, plane);
             uint8_t* dstp = vsapi->getWritePtr(dst, plane);
