@@ -6,6 +6,14 @@
 #include "VapourSynth4.h"
 #include "VSHelper4.h"
 
+#if defined(__amd64__) || defined(__i386__) || defined(_M_IX86) || defined(_M_X64)
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <cpuid.h>
+#endif
+#endif
+
 template <typename T, VinverseMode mode, bool eclip, bool thresh>
 class Vinverse;
 
@@ -32,7 +40,6 @@ static CPUFlags get_cpu_flags()
     CPUFlags flags;
 #if defined(__amd64__) || defined(__i386__) || defined(_M_IX86) || defined(_M_X64)
 #ifdef _MSC_VER
-#include <intrin.h>
     int info[4];
     __cpuid(info, 0);
     if (info[0] >= 1)
@@ -47,7 +54,6 @@ static CPUFlags get_cpu_flags()
         flags.avx512f = (info[1] & ((int)1 << 16)) != 0;
     }
 #else
-#include <cpuid.h>
     unsigned int eax, ebx, ecx, edx;
     if (__get_cpuid_max(0, nullptr) >= 1)
     {
