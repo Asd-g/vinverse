@@ -1,3 +1,6 @@
+##### 0.9.6:
+    Added support for Apple platforms.
+
 ##### 0.9.5:
     SIMD: fixed high bit depth.
     Added VapourSynth support.

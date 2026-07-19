@@ -34,9 +34,11 @@ private:
     bool v8;
 
     void finalize_plane_c(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept;
+#ifdef HAS_SSE2
     void finalize_plane_sse2(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept;
     void finalize_plane_avx2(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept;
     void finalize_plane_avx512(void* __restrict dstp_, const void* srcp_, const void* pb3_, const void* pb6_, int src_pitch, int dst_pitch, int pb_pitch, int clip2_pitch, int width, int height) noexcept;
+#endif
 
     void(*blur3)(void* dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;
     void(*blur5)(void* dstp, const void* srcp, int dst_pitch, int src_pitch, int width, int height) noexcept;

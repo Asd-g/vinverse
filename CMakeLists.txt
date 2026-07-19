@@ -6,7 +6,7 @@ if (NOT CMAKE_GENERATOR MATCHES "Visual Studio")
     endif()
 endif()
 
-project(vinverse VERSION 0.9.5 LANGUAGES CXX)
+project(vinverse VERSION 0.9.6 LANGUAGES CXX)
 
 option(BUILD_AVS_LIB "Build library for AviSynth+" ON)
 option(BUILD_VS_LIB "Build library for VapourSynth" OFF)
@@ -22,19 +22,31 @@ endif()
 message(STATUS "Build library for AviSynth+ - ${BUILD_AVS_LIB}")
 message(STATUS "Build library for VapourSynth - ${BUILD_VS_LIB}")
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|i.86")
+    set(IS_X86_AMD64 ON)
+else()
+    set(IS_X86_AMD64 OFF)
+endif()
+
 add_library(${PROJECT_NAME} MODULE
     "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/common.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/plugin.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx2.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx512.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_scalar.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_sse2.cpp"
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/vinverse"
-    "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/VCL2"
-)
+if (${IS_X86_AMD64})
+    target_sources(${PROJECT_NAME} PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx2.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx512.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_sse2.cpp"
+    )
+endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/vinverse")
+
+if (${IS_X86_AMD64})
+    target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/VCL2")
+endif()
 
 if (BUILD_AVS_LIB)
     target_sources(${PROJECT_NAME} PRIVATE
@@ -56,8 +68,18 @@ if (BUILD_VS_LIB)
         "${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_vs.h"
     )
 
-    if (NOT WIN32)
-        target_include_directories(${PROJECT_NAME} PRIVATE "/usr/local/include/vapoursynth")
+    if (SKBUILD)
+        find_package(Python COMPONENTS Interpreter REQUIRED)
+        execute_process(
+            COMMAND "${Python_EXECUTABLE}" -c "import vapoursynth; print(vapoursynth.get_include())"
+            OUTPUT_VARIABLE VAPOURSYNTH_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        target_include_directories(${PROJECT_NAME} PRIVATE "${VAPOURSYNTH_INCLUDE_DIR}")
+    else()
+        if (NOT WIN32)
+            target_include_directories(${PROJECT_NAME} PRIVATE "/usr/local/include/vapoursynth")
+        endif()
     endif()
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE VS_PLUGIN)
@@ -65,12 +87,16 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_sse2.cpp" PROPERTIES COMPILE_OPTIONS
-    "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-msse2>")
-set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx2.cpp" PROPERTIES COMPILE_OPTIONS
-    "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-mavx2;-mfma>")
-set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx512.cpp" PROPERTIES COMPILE_OPTIONS
-    "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX512>$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-mavx512f;-mavx512bw;-mavx512dq;-mavx512vl;-mavx512cd;-mfma>")
+if (${IS_X86_AMD64})
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_sse2.cpp" PROPERTIES COMPILE_OPTIONS
+        "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-msse2>")
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx2.cpp" PROPERTIES COMPILE_OPTIONS
+        "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX2>$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-mavx2;-mfma>")
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/vinverse/vinverse_avx512.cpp" PROPERTIES COMPILE_OPTIONS
+        "$<$<CXX_COMPILER_ID:MSVC>:/arch:AVX512>$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-mavx512f;-mavx512bw;-mavx512dq;-mavx512vl;-mavx512cd;-mfma>")
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HAS_SSE2)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
     target_link_libraries(${PROJECT_NAME} PRIVATE "libmmds")
@@ -100,6 +126,10 @@ if(MINGW)
 elseif(UNIX)
     string(TOLOWER "${PROJECT_NAME}" FILE_NAME_OUTPUT)
     set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${FILE_NAME_OUTPUT}.${PROJECT_VERSION}")
+endif()
+
+if (APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".dylib")
 endif()
 
 if (WIN32)
@@ -173,19 +203,29 @@ if (WIN32)
     endif()
 endif()
 
-if(UNIX)
-    include(GNUInstallDirs)
+if (SKBUILD)
+    install(TARGETS ${PROJECT_NAME} DESTINATION .)
+else()
+    if(UNIX)
+        include(GNUInstallDirs)
 
-    INSTALL(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/avisynth")
+        if (BUILD_AVS_LIB)
+            INSTALL(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/avisynth")
+        endif()
 
-    # uninstall target
-    if(NOT TARGET uninstall)
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-        IMMEDIATE @ONLY)
+        if (BUILD_VS_LIB)
+            INSTALL(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/vapoursynth")
+        endif()
 
-    add_custom_target(uninstall
-        COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+        # uninstall target
+        if(NOT TARGET uninstall)
+        configure_file(
+            "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+            "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+            IMMEDIATE @ONLY)
+
+        add_custom_target(uninstall
+            COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+        endif()
     endif()
 endif()

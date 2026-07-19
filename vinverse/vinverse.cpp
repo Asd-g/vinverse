@@ -4,16 +4,16 @@
 
 #include "vinverse.h"
 
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
 #endif
 
 AVS_FORCEINLINE void* aligned_malloc(size_t size, size_t align)
 {
     void* result = [&]() {
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
         return _aligned_malloc(size, align);
-#else 
+#else
         if (posix_memalign(&result, align, size))
             return result = nullptr;
         else
@@ -26,9 +26,9 @@ AVS_FORCEINLINE void* aligned_malloc(size_t size, size_t align)
 
 AVS_FORCEINLINE void aligned_free(void* ptr)
 {
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
     _aligned_free(ptr);
-#else 
+#else
     free(ptr);
 #endif
 }
@@ -54,6 +54,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
     if (opt < -1 || opt > 3)
         env->ThrowError("Vinverse: opt must be between -1..3.");
 
+#ifdef HAS_SSE2
     const bool avx512 = !!(env->GetCPUFlags() & CPUF_AVX512F);
     const bool avx2 = !!(env->GetCPUFlags() & CPUF_AVX2);
     const bool sse2 = !!(env->GetCPUFlags() & CPUF_SSE2);
@@ -64,6 +65,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
         env->ThrowError("Vinverse: opt=2 requires AVX2.");
     if (!sse2 && opt == 1)
         env->ThrowError("Vinverse: opt=1 requires SSE2.");
+#endif
 
     if constexpr (eclip)
     {
@@ -80,6 +82,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
     if (thr_ < 0 || thr_ > peak)
         env->ThrowError("Vinverse: thr must be between 0..%s!", std::to_string(peak).c_str());
 
+#ifdef HAS_SSE2
     if ((avx512 && opt < 0) || opt == 3)
     {
         pb_pitch = (vi.width + 63) & ~63;
@@ -222,6 +225,7 @@ Vinverse<T, mode, eclip, thresh>::Vinverse(PClip child, float sstr, int amnt, in
         fin_plane = &Vinverse::finalize_plane_sse2;
     }
     else
+#endif
     {
         pb_pitch = (vi.width + 15) & ~15;
 

@@ -6,11 +6,13 @@
 #include "VapourSynth4.h"
 #include "VSHelper4.h"
 
+#ifdef HAS_SSE2
 #if defined(__amd64__) || defined(__i386__) || defined(_M_IX86) || defined(_M_X64)
 #ifdef _MSC_VER
 #include <intrin.h>
 #else
 #include <cpuid.h>
+#endif
 #endif
 #endif
 
@@ -28,6 +30,7 @@ template <typename T, VinverseMode mode, bool eclip, bool thresh>
 void create_vinverse(VSMap* out, VSNode* clip, float sstr, int amnt, int uv, float scl, int opt, VSNode* clip2, int thr,
     VSCore* core, const VSAPI* vsapi);
 
+#ifdef HAS_SSE2
 struct CPUFlags
 {
     bool sse2 = false;
@@ -70,6 +73,7 @@ static CPUFlags get_cpu_flags()
 #endif
     return flags;
 }
+#endif
 
 template <typename T, VinverseMode mode, bool eclip, bool thresh>
 class Vinverse
@@ -84,6 +88,8 @@ public:
         : sstr_(sstr), amnt_(amnt), uv_(uv), scl_(scl), child_(child), clip2_(clip2), thr_(thr)
     {
         vi = vsapi->getVideoInfo(child_);
+
+#ifdef HAS_SSE2
         CPUFlags cpu = get_cpu_flags();
 
         if ((cpu.avx512f && opt < 0) || opt == 3)
@@ -201,6 +207,7 @@ public:
             fin_plane = &Vinverse::finalize_plane_sse2;
         }
         else
+#endif
         {
             pb_pitch = (vi->width + 15) & ~15;
 

@@ -265,6 +265,7 @@ static void VS_CC vinverse_create(const VSMap* in, VSMap* out, void* userData, V
         return;
     }
 
+#ifdef HAS_SSE2
     CPUFlags cpu = get_cpu_flags();
     if (!cpu.avx512f && opt == 3)
     {
@@ -287,6 +288,7 @@ static void VS_CC vinverse_create(const VSMap* in, VSMap* out, void* userData, V
             vsapi->freeNode(clip2);
         return;
     }
+#endif
 
     bool is_16bit = vi->format.bytesPerSample == 2;
     bool eclip = (clip2 != nullptr);
